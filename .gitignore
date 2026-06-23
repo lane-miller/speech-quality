@@ -1,0 +1,13 @@
+__pycache__/
+*.py[cod]
+.venv/
+*.log
+.DS_Store
+
+# Audio data
+data/
+
+# External model repos/weights
+*.onnx
+*.pt
+*.pth
