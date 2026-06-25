@@ -14,3 +14,10 @@ DATA_DIR = "/Volumes/LPM03 storage/Datasets/Audio/Projects/speech-quality"
 
 # Sample rate
 SAMPLE_RATE = 16000
+
+# Audio selection
+LIBRISPEECH_ROOT = "/Volumes/LPM03 storage/Datasets/Audio/LibriSpeech/LibriSpeech"
+RESULTS_DIR      = "/Users/lane/code/ind/speech-quality/results"
+N_MALE           = 5
+N_FEMALE         = 5
+M_CLIPS          = 5
