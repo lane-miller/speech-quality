@@ -1,0 +1,12 @@
+metric,pearson_r_vs_severity,spearman_rho_vs_severity,normalized_std,relative_normalized_std
+dnsmos_sig,0.8188,0.8367,0.1704,0.6888
+dnsmos_bak,0.917,0.8833,0.1134,0.4584
+dnsmos_ovr,0.9039,0.9152,0.1194,0.4826
+nisqa,0.9242,0.9295,0.0967,0.3909
+clipping_rate,-0.0015,-0.0019,0.2474,1.0
+crest_factor_db,0.2307,0.2476,0.2391,0.9665
+wada_snr_db,0.8365,0.879,0.0677,0.2736
+spectral_flatness,0.0828,0.0366,0.1567,0.6334
+hf_energy_ratio,0.1724,0.1601,0.1946,0.7866
+pitch_confidence,0.5782,0.6285,0.1602,0.6475
+DNSMOS OVR vs. NISQA,0.9172,0.9143,,
