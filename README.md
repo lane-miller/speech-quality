@@ -66,3 +66,22 @@ Results are saved per degradation to results/.
 
 ## Data
 Audio lives on external SSD. See `config.py` for paths.
+
+## Results
+Per-degradation analysis outputs (scatter grids, correlation tables, heatmaps)
+are saved to `results/analysis/`. Compiled findings and discussion are in
+`results/findings.md`.
+
+## Running analysis
+```bash
+python analyze.py --degradation clipping
+python analyze.py --degradation noise_impulsive --snr 10
+```
+
+## Key Findings
+
+- NISQA consistently outperforms DNSMOS for non-noise distortions while DNSMOS is more sensitive to additive noise; the two metrics should not be treated as interchangeable across degradation types
+- DNSMOS/NISQA agreement varies dramatically by degradation type — near-perfect under babble (ρ=0.914) and near-zero under codec (ρ=0.042) — making neural metric choice consequential for evaluation design
+- WADA-SNR is the most broadly useful engineered metric, tracking perceptual quality meaningfully across noise, reverb, and tonal conditions despite being designed only for SNR estimation
+- Engineered spectral metrics (spectral_flatness, hf_energy_ratio) are excellent physical trackers for bandwidth-related degradations but decouple from perceived quality at severe levels — physical measurement does not imply perceptual relevance
+- Codec and impulsive noise are the hardest degradations to detect: no metric tracks codec artifacts reliably above 16 kbps, and impulsive noise requires very low SNR (≤5 dB) before any metric responds meaningfully

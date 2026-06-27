@@ -32,6 +32,7 @@ DEGRADATIONS = [
     "noise_babble",
     "noise_tonal_lf",
     "noise_tonal_hf",
+    "noise_impulsive",
     "codec",
     "lowpass",
     "reverb",
@@ -58,12 +59,21 @@ N_COLS = 4
 # Data loading
 # ---------------------------------------------------------------------------
 
-def load_data(degradation: str) -> tuple[pd.DataFrame, pd.DataFrame]:
+def load_data(
+    degradation: str, snr_filter: float | None = None
+) -> tuple[pd.DataFrame, pd.DataFrame]:
     deg_path = RESULTS_DIR / f"{degradation}_results.csv"
     baseline_path = RESULTS_DIR / "baseline_results.csv"
 
     df = pd.read_csv(deg_path)
     df["severity_value"] = pd.to_numeric(df["severity_value"], errors="coerce")
+
+    if snr_filter is not None and degradation == "noise_impulsive":
+        df = df[df["impulse_snr_db"] == snr_filter]
+        if df.empty:
+            raise ValueError(
+                f"No rows found for noise_impulsive with impulse_snr_db == {snr_filter}."
+            )
 
     baseline = pd.read_csv(baseline_path)
     return df, baseline
@@ -470,14 +480,27 @@ def main() -> None:
         choices=DEGRADATIONS,
         help="Degradation type to analyze (must have a corresponding results CSV).",
     )
+    parser.add_argument(
+        "--snr",
+        type=float,
+        default=None,
+        help=(
+            "For noise_impulsive only: filter results to rows matching this "
+            "impulse_snr_db value. Ignored for all other degradations."
+        ),
+    )
     args = parser.parse_args()
     degradation: str = args.degradation
+    snr_filter: float | None = args.snr
 
-    df, baseline = load_data(degradation)
+    df, baseline = load_data(degradation, snr_filter=snr_filter)
     metrics = get_metrics(degradation)
     severity_param = get_severity_param(df)
 
-    out_dir = RESULTS_DIR / "analysis" / degradation
+    if degradation == "noise_impulsive" and snr_filter is not None:
+        out_dir = RESULTS_DIR / "analysis" / f"noise_impulsive_snr{snr_filter:.0f}"
+    else:
+        out_dir = RESULTS_DIR / "analysis" / degradation
     out_dir.mkdir(parents=True, exist_ok=True)
 
     variance = compute_normalized_variance(df, metrics)

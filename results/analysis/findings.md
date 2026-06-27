@@ -91,3 +91,6 @@
 - hf_energy_ratio physically detects HF tonal presence (ρ=-0.702) but is perceptually decoupled (rho_vs_nisqa=-0.49) — spectral energy evidence of noise does not map proportionally to perceived degradation
 - WADA-SNR most balanced engineered tracker: meaningful severity correlation (ρ=0.843) and strongest perceptual alignment (rho_vs_dnsmos_ovr=0.76, rho_vs_nisqa=0.76) — more perceptually predictive than in the LF tonal condition
 
+**Noise Impulsive**
+- No metric reliably tracks click rate across the tested severity range at moderate SNR levels (10+ dB)
+
