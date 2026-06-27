@@ -122,7 +122,8 @@ def test_dnsmos():
 
 def test_nisqa():
     """Real speech: float in [1,5]; lower for heavily clipped audio."""
-    # NOTE: this test invokes a subprocess and may take 10–20 seconds.
+    # NOTE: nisqaModel is loaded once at module level (_NISQA_MODEL) and
+    # inference is direct; no subprocess overhead.
     try:
         audio = SPEECH_CLIP.copy()
         clipped = clip_audio(audio, threshold=0.1)

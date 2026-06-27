@@ -7,10 +7,11 @@ clip selection parameters, degradation sweep settings, and external model paths.
 DNSMOS_MODEL_PATH = "/Users/lane/audio-ml-tools/DNS-Challenge/DNSMOS/DNSMOS/sig_bak_ovr.onnx"
 NISQA_DIR        = "/Users/lane/audio-ml-tools/NISQA"
 NISQA_MODEL_PATH = "/Users/lane/audio-ml-tools/NISQA/weights/nisqa_mos_only.tar"
-NISQA_SCRIPT = "/Users/lane/audio-ml-tools/NISQA/run_predict.py"
 
 # Data paths
 DATA_DIR = "/Volumes/LPM03 storage/Datasets/Audio/Projects/speech-quality"
+TRAIN_CLEAN_DIR  = "/Volumes/LPM03 storage/Datasets/Audio/LibriSpeech/LibriSpeech/train-clean-100"
+TEST_CLEAN_DIR   = "/Volumes/LPM03 storage/Datasets/Audio/LibriSpeech/LibriSpeech/test-clean"
 
 # Sample rate
 SAMPLE_RATE = 16000
@@ -23,23 +24,23 @@ N_FEMALE         = 5
 M_CLIPS          = 5
 
 # --- Degradation sweep parameters ---
-CLIP_THRESHOLDS        = [round(x * 0.1, 1) for x in range(1, 11)]   # 0.1 to 1.0
-NOISE_SNRS_DB          = list(range(0, 45, 5))                        # 0 to 40 dB
-CODEC_BITRATES_KBPS    = [8, 16, 32, 64, 128]
-LOWPASS_CUTOFFS_HZ     = list(range(1000, 8000, 1000))                # 1k to 7k
-REVERB_T60S            = [round(x * 0.2 + 0.1, 1) for x in range(8)] # 0.1 to 1.5
+CLIP_THRESHOLDS     = [0.05, 0.1, 0.15, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0]
+NOISE_SNRS_DB       = [0, 2, 5, 8, 12, 16, 20, 25, 30, 35, 40]
+CODEC_BITRATES_KBPS = [6, 8, 12, 16, 24, 32, 48, 64, 96, 128]
+LOWPASS_CUTOFFS_HZ  = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 7000]
+REVERB_T60S         = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.8, 1.0, 1.2, 1.5]
+IMPULSE_CLICK_RATES = [1, 2, 3, 5, 8, 10, 15, 20, 30, 50]
 
-HUM_F0_HZ              = 60
-TONAL_F0_HZ            = 3400
-N_HARMONICS            = 5
-IMPULSE_CLICK_RATES = [1, 2, 5, 10, 20, 50]  # clicks/sec
-N_BABBLE_SPEAKERS = 8
+NOISE_TONAL_LF_F0_HZ = 60
+NOISE_TONAL_HF_F0_HZ = 3400
+N_HARMONICS          = 5
+N_BABBLE_SPEAKERS    = 8
 
 # --- Multi-artifact combinations ---
 MULTI_ARTIFACT_COMBOS = [
-    ("babble", "reverb"),
-    ("pink",   "codec"),
-    ("clip",   "codec"),
-    ("hum",    "lowpass"),
+    ("noise_babble",    "reverb"),
+    ("noise_pink",      "codec"),
+    ("clipping",        "codec"),
+    ("noise_tonal_lf",  "lowpass"),
 ]
 

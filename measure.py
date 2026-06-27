@@ -5,7 +5,9 @@ array (mono, 16 kHz) and returns a scalar or dict of scalars. Neural metrics
 metrics operate on raw audio. C50 operates on a RIR, not audio directly.
 """
 
-import subprocess
+import contextlib
+import os
+import sys
 import tempfile
 from pathlib import Path
 
@@ -15,6 +17,11 @@ import onnxruntime as ort
 import soundfile as sf
 
 import config
+
+sys.path.insert(0, config.NISQA_DIR)
+from nisqa.NISQA_model import nisqaModel  # noqa: E402
+
+_NISQA_MODEL: nisqaModel | None = None
 
 
 # --- Preprocessing ---
@@ -85,44 +92,53 @@ def nisqa(audio: np.ndarray) -> float:
     NISQA: no-reference neural MOS predictor using CNN + self-attention on
     mel spectrograms. Returns a single MOS estimate (1–5). More sensitive to
     reverberation and bandwidth than DNSMOS; trained on diverse degradation types.
+
+    The nisqaModel is loaded once at module level (_NISQA_MODEL) and reused
+    across calls; only the dataset is re-initialized per call.
     """
+    global _NISQA_MODEL
+
     audio = _normalize_rms(audio)
     with tempfile.TemporaryDirectory() as tmpdir:
         wav_path = Path(tmpdir) / "input.wav"
         sf.write(str(wav_path), audio, config.SAMPLE_RATE)
 
-        result = subprocess.run(
-            [
-                "python", config.NISQA_SCRIPT,
-                "--mode", "predict_file",
-                "--pretrained_model", config.NISQA_MODEL_PATH,
-                "--deg", str(wav_path),
-                "--output_dir", tmpdir,
-            ],
-            capture_output=True, text=True, check=True,
-        )
+        # Exact args dict as constructed by run_predict.py after argparse +
+        # the two derived keys (tr_bs_val, tr_num_workers) it adds before
+        # calling nisqaModel().  After _loadModel() the checkpoint's stored
+        # args are merged in (checkpoint['args'].update(self.args)), so model-
+        # specific hyperparameters come from the checkpoint; we only need to
+        # supply the keys that run_predict.py would have supplied.
+        args = {
+            "mode":              "predict_file",
+            "pretrained_model":  config.NISQA_MODEL_PATH,
+            "deg":               str(wav_path),
+            "data_dir":          None,
+            "output_dir":        None,
+            "csv_file":          None,
+            "csv_deg":           None,
+            "num_workers":       0,
+            "bs":                1,
+            "ms_channel":        None,
+            "tr_bs_val":         1,
+            "tr_num_workers":    0,
+        }
 
-        # run_predict.py prints a dataframe with columns: deg, mos_pred, model
-        lines = result.stdout.splitlines()
-        for i, line in enumerate(lines):
-            parts = line.split()
-            if len(parts) >= 2 and parts[0] == "deg" and "mos_pred" in parts:
-                try:
-                    mos_idx = parts.index("mos_pred")
-                except ValueError:
-                    raise RuntimeError(
-                        f"Could not determine mos_pred column index from header: {line!r}"
-                    ) from None
-                candidates = [l for l in lines[i + 1:] if l.strip()]
-                if not candidates:
-                    raise RuntimeError(
-                        f"No data rows after NISQA header:\n{result.stdout}"
-                    )
-                data_parts = candidates[0].split()
-                if len(data_parts) > mos_idx:
-                    return float(data_parts[mos_idx])
+        if _NISQA_MODEL is None:
+            _NISQA_MODEL = nisqaModel(args)
+        else:
+            _NISQA_MODEL.args["deg"] = str(wav_path)
 
-        raise RuntimeError(f"Could not parse NISQA output:\n{result.stdout}")
+        # _loadDatasetsFile() only builds a one-row DataFrame and
+        # constructs a new SpeechQualityDataset; it does not reload
+        # weights or touch self.model / self.dev in any way.  It is
+        # the minimal call needed to point ds_val at the new file.
+        with open(os.devnull, "w") as devnull, \
+             contextlib.redirect_stdout(devnull), \
+             contextlib.redirect_stderr(devnull):
+            _NISQA_MODEL._loadDatasetsFile()
+            df = _NISQA_MODEL.predict()
+        return float(df["mos_pred"].iloc[0])
 
 
 # --- Engineered metrics ---
